@@ -55,12 +55,24 @@ fileprivate enum StickyBehaviorKey: EnvironmentKey {
 
 /// An object that can control the scroll position of a ``StickyScrollView``
 @Observable fileprivate final class StickyScrollViewCoordinator {
-    /// The identifier of the scroll target
-    fileprivate var target: AnyHashable?
+    /// The sticky scroll view scroll position
+    fileprivate var scrollPosition: ScrollPosition
+    
+    /// The sticky scroll view content offset
+    fileprivate var scrollContentOffset: CGPoint
+
+    /// Makes a ``StickyScrollViewCoordinator`` with an initial position
+    /// - Parameters:
+    ///   - scrollPosition: Initial ``ScrollPosition`` of the ``StickyScrollView``
+    ///   - scrollContentOffset: Content offset of the ``StickyScrollView``
+    fileprivate init(scrollPosition: ScrollPosition, scrollContentOffset: CGPoint = .zero) {
+        self.scrollPosition = scrollPosition
+        self.scrollContentOffset = scrollContentOffset
+    }
 }
 
 /// A ``StickyScrollViewCoordinator`` that subviews of a ``StickyScrollView`` can use to control the scroll position
-fileprivate enum StickyScrollCoordinator: EnvironmentKey {
+fileprivate enum StickyScrollPosition: EnvironmentKey {
     fileprivate static var defaultValue: StickyScrollViewCoordinator? = nil
 }
 
@@ -90,9 +102,9 @@ fileprivate extension EnvironmentValues {
     }
     
     /// An optional ``StickyScrollViewCoordinator`` that subviews of a ``StickyScrollView`` can use to control the scroll position
-    var stickyScrollCoordinator: StickyScrollCoordinator.Value {
-        get { self[StickyScrollCoordinator.self] }
-        set { self[StickyScrollCoordinator.self] = newValue }
+    var stickyScrollCoordinator: StickyScrollPosition.Value {
+        get { self[StickyScrollPosition.self] }
+        set { self[StickyScrollPosition.self] = newValue }
     }
 }
 
@@ -165,7 +177,7 @@ public struct Sticky: ViewModifier {
                 }) {
                     offset -= frame.width - other.value.minX
                 }
-                return CGSize(width: offset, height: 0)
+                return CGSize(width: offset, height: .zero)
             case .vertical:
                 var offset = -frame.minY
                 if let other = stickyFrames.first(where: { (key, value) in
@@ -174,15 +186,26 @@ public struct Sticky: ViewModifier {
                 }) {
                     offset -= frame.height - other.value.minY
                 }
-                return CGSize(width: 0, height: offset)
+                return CGSize(width: .zero, height: offset)
             }
         case .stack:
             switch stickyAxis {
             case .horizontal:
-                return CGSize(width: -frame.minX + stickingMin, height: 0)
+                return CGSize(width: -frame.minX + stickingMin, height: .zero)
             case .vertical:
-                return CGSize(width: 0, height: -frame.minY + stickingMin)
+                return CGSize(width: .zero, height: -frame.minY + stickingMin)
             }
+        }
+    }
+    
+    /// The position to scroll to when the view is tapped
+    private var scrollPosition: CGPoint {
+        guard let scrollContentOffset = stickyScrollCoordinator?.scrollContentOffset else { return .zero }
+        switch stickyAxis {
+        case .horizontal:
+            return CGPoint(x: frame.minX + scrollContentOffset.x - stickingMin, y: .zero)
+        case .vertical:
+            return CGPoint(x: .zero, y: frame.minY + scrollContentOffset.y - stickingMin)
         }
     }
 
@@ -202,7 +225,7 @@ public struct Sticky: ViewModifier {
                 .onTapGesture {
                     if isTappable {
                         withAnimation(.easeInOut(duration: 0.25)) {
-                            stickyScrollCoordinator?.target = id
+                            stickyScrollCoordinator?.scrollPosition.scrollTo(point: scrollPosition)
                         }
                     }
                 }
@@ -213,6 +236,9 @@ public struct Sticky: ViewModifier {
 }
 
 public extension View {
+    /// Makes view sticky within a ``StickyScrollView``
+    /// - Parameter isTappable: Does tapping scroll to the view
+    /// - Returns: The sticky view
     func sticky(isTappable: Bool = false) -> some View {
         modifier(Sticky(isTappable: isTappable))
     }
@@ -225,7 +251,7 @@ public struct StickyScrollView<Content: View>: View {
     private let content: Content
     
     @State private var frames: StickyFrames.Value = [:]
-    @State private var scrollCoordinator = StickyScrollViewCoordinator()
+    @State private var scrollCoordinator = StickyScrollViewCoordinator(scrollPosition: ScrollPosition(edge: .top))
     
     /// Creates a ``ScrollView`` that allows content to stick once it reaches the starting edge
     /// - Parameters:
@@ -246,7 +272,8 @@ public struct StickyScrollView<Content: View>: View {
         ScrollView(axis == .horizontal ? .horizontal : .vertical) {
             content
         }
-        .scrollPosition(id: $scrollCoordinator.target)
+        .onScrollGeometryChange(for: CGPoint.self, of: { $0.contentOffset }, action: { scrollCoordinator.scrollContentOffset = $1 })
+        .scrollPosition($scrollCoordinator.scrollPosition)
         .coordinateSpace(name: stickyCoordinateSpace)  // Define coordinate space for subviews
         .onPreferenceChange(StickyFramePreference.self) {
             frames = $0  // Collect individual frames from subviews
@@ -290,7 +317,7 @@ public struct StickyScrollView<Content: View>: View {
 }
 
 #Preview {
-    StickyScrollView(axis: .horizontal, behavior: .replace) {
+    StickyScrollView(axis: .horizontal, behavior: .stack) {
         HStack {
             Image(systemName: "globe")
                 .imageScale(.large)
@@ -301,7 +328,7 @@ public struct StickyScrollView<Content: View>: View {
                     .font(.headline)
                     .frame(maxHeight: .infinity)
                     .background(.regularMaterial)
-                    .sticky()
+                    .sticky(isTappable: true)
                 Text("Sticky 2-\(idx)")
                     .font(.subheadline)
                     .frame(maxHeight: .infinity)
