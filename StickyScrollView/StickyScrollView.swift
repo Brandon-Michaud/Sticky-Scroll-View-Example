@@ -1,0 +1,315 @@
+//
+//  StickyScrollView.swift
+//  StickyScrollView
+//
+//  Created by Brandon Michaud on 1/1/26.
+//  Adapted from https://github.com/objcio/S01E334-sticky-headers-for-scroll-views-part-2
+//
+
+import SwiftUI
+
+/// The coordinate space name used by a ``StickyScrollView``
+fileprivate let stickyCoordinateSpace = "stickyCoordinateSpace"
+
+/// Controls whether the ``Sticky`` view modifier can be applied
+fileprivate enum Stickable: EnvironmentKey {
+    fileprivate static var defaultValue: Bool = false
+}
+
+/// A preference used by subviews to communicate their frames to their ``StickyScrollView`` superview
+fileprivate enum StickyFramePreference: PreferenceKey {
+    fileprivate static var defaultValue: [Namespace.ID: CGRect] = [:]
+
+    fileprivate static func reduce(value: inout Value, nextValue: () -> Value) {
+        value.merge(nextValue()) { $1 }
+    }
+}
+
+/// A collection of sticky frames used for subviews in a ``StickyScrollView`` to determine their offset
+fileprivate enum StickyFrames: EnvironmentKey {
+    fileprivate static var defaultValue: [Namespace.ID: CGRect] = [:]
+}
+
+/// The sticky axis used by subviews in a ``StickyScrollView`` to determine their offset
+fileprivate enum StickyAxis: EnvironmentKey {
+    fileprivate static var defaultValue: Axis = .vertical
+}
+
+/// Describes how a ``StickyScrollView`` should handle situations where multiple subviews are sticking
+public enum StickyBehavior: String, CaseIterable {
+    /// Any sticky view that reaches the ending edge of an already sticking view
+    /// (or the starting edge of the scroll view if no views are sticking)
+    /// will replace the already sticking view if there is one
+    case replace
+    
+    /// Any sticky view that reaches the ending edge of already sticking views
+    /// (or the starting edge of the scroll view if no views are sticking)
+    /// will append to the already sticking views
+    case stack
+}
+
+/// The ``StickyBehavior`` used by subviews in a ``StickyScrollView`` to determine their offset
+fileprivate enum StickyBehaviorKey: EnvironmentKey {
+    fileprivate static var defaultValue: StickyBehavior = .stack
+}
+
+/// An object that can control the scroll position of a ``StickyScrollView``
+@Observable fileprivate final class StickyScrollViewCoordinator {
+    /// The identifier of the scroll target
+    fileprivate var target: AnyHashable?
+}
+
+/// A ``StickyScrollViewCoordinator`` that subviews of a ``StickyScrollView`` can use to control the scroll position
+fileprivate enum StickyScrollCoordinator: EnvironmentKey {
+    fileprivate static var defaultValue: StickyScrollViewCoordinator? = nil
+}
+
+fileprivate extension EnvironmentValues {
+    /// Controls whether the ``Sticky`` view modifier can be applied
+    var isStickable: Stickable.Value {
+        get { self[Stickable.self] }
+        set { self[Stickable.self] = newValue }
+    }
+    
+    /// A collection of sticky frames used for subviews in a ``StickyScrollView`` to determine their offset
+    var stickyFrames: StickyFrames.Value {
+        get { self[StickyFrames.self] }
+        set { self[StickyFrames.self] = newValue }
+    }
+    
+    /// The sticky axis used by subviews in a ``StickyScrollView`` to determine their offset
+    var stickyAxis: StickyAxis.Value {
+        get { self[StickyAxis.self] }
+        set { self[StickyAxis.self] = newValue }
+    }
+    
+    /// Describes how a ``StickyScrollView`` should handle situations where multiple subviews are sticking
+    var stickyBehavior: StickyBehaviorKey.Value {
+        get { self[StickyBehaviorKey.self] }
+        set { self[StickyBehaviorKey.self] = newValue }
+    }
+    
+    /// An optional ``StickyScrollViewCoordinator`` that subviews of a ``StickyScrollView`` can use to control the scroll position
+    var stickyScrollCoordinator: StickyScrollCoordinator.Value {
+        get { self[StickyScrollCoordinator.self] }
+        set { self[StickyScrollCoordinator.self] = newValue }
+    }
+}
+
+/// A view modifier to make some view inside of a ``StickyScrollView`` sticky
+public struct Sticky: ViewModifier {
+    // Used to remove self from sticky frames
+    @Namespace private var id
+    
+    // Collect offset rendering information
+    @Environment(\.isStickable) fileprivate var isStickable
+    @Environment(\.stickyFrames) fileprivate var stickyFrames
+    @Environment(\.stickyAxis) fileprivate var stickyAxis
+    @Environment(\.stickyBehavior) fileprivate var stickyBehavior
+    @Environment(\.stickyScrollCoordinator) fileprivate var stickyScrollCoordinator
+    
+    // Keep track of the view's frame
+    @State private var frame: CGRect = .zero
+    
+    private let isTappable: Bool
+    
+    /// Creates a view modifier to make content stick to the starting edge
+    /// - Parameter isTappable: Whether or not tapping the sticky content scrolls to it
+    public init(isTappable: Bool = false) {
+        self.isTappable = isTappable
+    }
+    
+    /// If the view should be sticking
+    private var isSticking: Bool {
+        switch stickyAxis {
+        case .horizontal:
+            return frame.minX < stickingMin
+        case .vertical:
+            return frame.minY < stickingMin
+        }
+    }
+    
+    /// The minimum value below which a view will stick
+    private var stickingMin: CGFloat {
+        guard stickyBehavior != .replace else { return 0 }
+        
+        switch stickyAxis {
+        case .horizontal:
+            let otherSticking = stickyFrames.filter { (key, value) in
+                key != id && value.minX <= frame.minX
+            }
+            return otherSticking.reduce(into: 0) { (result, element) in
+                result += element.value.width
+            }
+        case .vertical:
+            let otherSticking = stickyFrames.filter { (key, value) in
+                key != id && value.minY <= frame.minY
+            }
+            return otherSticking.reduce(into: 0) { (result, element) in
+                result += element.value.height
+            }
+        }
+    }
+    
+    /// The offset needed to keep the view visible
+    private var offset: CGSize {
+        guard isSticking else { return CGSize.zero }
+        switch stickyBehavior {
+        case .replace:
+            switch stickyAxis {
+            case .horizontal:
+                var offset = -frame.minX
+                if let other = stickyFrames.first(where: { (key, value) in
+                    key != id && value.minX > frame.minX && value.minX < frame.width
+
+                }) {
+                    offset -= frame.width - other.value.minX
+                }
+                return CGSize(width: offset, height: 0)
+            case .vertical:
+                var offset = -frame.minY
+                if let other = stickyFrames.first(where: { (key, value) in
+                    key != id && value.minY > frame.minY && value.minY < frame.height
+
+                }) {
+                    offset -= frame.height - other.value.minY
+                }
+                return CGSize(width: 0, height: offset)
+            }
+        case .stack:
+            switch stickyAxis {
+            case .horizontal:
+                return CGSize(width: -frame.minX + stickingMin, height: 0)
+            case .vertical:
+                return CGSize(width: 0, height: -frame.minY + stickingMin)
+            }
+        }
+    }
+
+    public func body(content: Content) -> some View {
+        if isStickable {
+            content
+                .id(id)
+                .offset(offset)
+                .zIndex(isSticking ? .infinity : 0)  // If the view is sticking, it should appear above all others
+                .overlay(GeometryReader { geometry in
+                    let frame = geometry.frame(in: .named(stickyCoordinateSpace))
+                    Color.clear
+                        .onAppear { self.frame = frame }
+                        .onChange(of: frame) { self.frame = frame }
+                        .preference(key: StickyFramePreference.self, value: [id: self.frame])
+                })
+                .onTapGesture {
+                    if isTappable {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            stickyScrollCoordinator?.target = id
+                        }
+                    }
+                }
+        } else {
+            content
+        }
+    }
+}
+
+public extension View {
+    func sticky(isTappable: Bool = false) -> some View {
+        modifier(Sticky(isTappable: isTappable))
+    }
+}
+
+/// A ``ScrollView`` that allows content to stick once it reaches the edge of the screen
+public struct StickyScrollView<Content: View>: View {
+    private let axis: Axis
+    private let behavior: StickyBehavior
+    private let content: Content
+    
+    @State private var frames: StickyFrames.Value = [:]
+    @State private var scrollCoordinator = StickyScrollViewCoordinator()
+    
+    /// Creates a ``ScrollView`` that allows content to stick once it reaches the starting edge
+    /// - Parameters:
+    ///   - axis: The direction of scroll
+    ///   - behavior: How to handle when multiple views have reached the starting edge
+    ///   - content: Content of the scroll view
+    public init(
+        axis: Axis = .vertical,
+        behavior: StickyBehavior = .stack,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.axis = axis
+        self.behavior = behavior
+        self.content = content()
+    }
+    
+    public var body: some View {
+        ScrollView(axis == .horizontal ? .horizontal : .vertical) {
+            content
+        }
+        .scrollPosition(id: $scrollCoordinator.target)
+        .coordinateSpace(name: stickyCoordinateSpace)  // Define coordinate space for subviews
+        .onPreferenceChange(StickyFramePreference.self) {
+            frames = $0  // Collect individual frames from subviews
+        }
+        .environment(\.isStickable, true)  // Allow subviews to stick
+        .environment(\.stickyFrames, frames)  // Communicate frames to subviews
+        .environment(\.stickyAxis, axis)  // Communicate scroll axis to subviews
+        .environment(\.stickyBehavior, behavior)  // Communicate sticky behvior to subviews
+        .environment(\.stickyScrollCoordinator, scrollCoordinator)  // Allow subviews to control scrolling
+    }
+}
+
+#Preview {
+    VStack {
+        Color.blue
+            .frame(height: 100)
+        
+        StickyScrollView(axis: .vertical) {
+            VStack {
+                Image(systemName: "globe")
+                    .imageScale(.large)
+                    .foregroundColor(.accentColor)
+                    .padding()
+                ForEach(0..<50) { idx in
+                    Text("Heading 1-\(idx)")
+                        .font(.title)
+                        .frame(maxWidth: .infinity)
+                        .background(.regularMaterial)
+                        .sticky(isTappable: true)
+                    Text("Heading 2-\(idx)")
+                        .font(.title2)
+                        .frame(maxWidth: .infinity)
+                        .background(.regularMaterial)
+                    Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce ut turpis tempor, porta diam ut, iaculis leo. Phasellus condimentum euismod enim fringilla vulputate. Suspendisse sed quam mattis, suscipit ipsum vel, volutpat quam. Donec sagittis felis nec nulla viverra, et interdum enim sagittis. Nunc egestas scelerisque enim ac feugiat. ")
+                        .padding()
+                }
+            }
+            .background(.orange)
+        }
+    }
+}
+
+#Preview {
+    StickyScrollView(axis: .horizontal, behavior: .replace) {
+        HStack {
+            Image(systemName: "globe")
+                .imageScale(.large)
+                .foregroundColor(.accentColor)
+                .padding()
+            ForEach(0..<50) { idx in
+                Text("Sticky 1-\(idx)")
+                    .font(.headline)
+                    .frame(maxHeight: .infinity)
+                    .background(.regularMaterial)
+                    .sticky()
+                Text("Sticky 2-\(idx)")
+                    .font(.subheadline)
+                    .frame(maxHeight: .infinity)
+                    .background(.regularMaterial)
+                Text("Blah blah blah")
+            }
+        }
+        .frame(height: 200)
+        .background(.orange)
+    }
+}
