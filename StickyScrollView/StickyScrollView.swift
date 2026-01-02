@@ -60,14 +60,23 @@ fileprivate enum StickyBehaviorKey: EnvironmentKey {
     
     /// The sticky scroll view content offset
     fileprivate var scrollContentOffset: CGPoint
+    
+    /// The sticky scroll view content insets
+    fileprivate var scrollContentInsets: EdgeInsets
 
     /// Makes a ``StickyScrollViewCoordinator`` with an initial position
     /// - Parameters:
     ///   - scrollPosition: Initial ``ScrollPosition`` of the ``StickyScrollView``
     ///   - scrollContentOffset: Content offset of the ``StickyScrollView``
-    fileprivate init(scrollPosition: ScrollPosition, scrollContentOffset: CGPoint = .zero) {
+    ///   - scrollContentInsets: Content insets of the ``StickyScrollView``
+    fileprivate init(
+        scrollPosition: ScrollPosition,
+        scrollContentOffset: CGPoint = .zero,
+        scrollContentInsets: EdgeInsets = .init()
+    ) {
         self.scrollPosition = scrollPosition
         self.scrollContentOffset = scrollContentOffset
+        self.scrollContentInsets = scrollContentInsets
     }
 }
 
@@ -200,12 +209,18 @@ public struct Sticky: ViewModifier {
     
     /// The position to scroll to when the view is tapped
     private var scrollPosition: CGPoint {
-        guard let scrollContentOffset = stickyScrollCoordinator?.scrollContentOffset else { return .zero }
+        guard
+            let scrollContentOffset = stickyScrollCoordinator?.scrollContentOffset,
+            let scrollContentInsets = stickyScrollCoordinator?.scrollContentInsets
+        else {
+            return .zero
+        }
+        
         switch stickyAxis {
         case .horizontal:
-            return CGPoint(x: frame.minX + scrollContentOffset.x - stickingMin, y: .zero)
+            return CGPoint(x: frame.minX + scrollContentOffset.x - stickingMin + scrollContentInsets.leading, y: .zero)
         case .vertical:
-            return CGPoint(x: .zero, y: frame.minY + scrollContentOffset.y - stickingMin)
+            return CGPoint(x: .zero, y: frame.minY + scrollContentOffset.y - stickingMin + scrollContentInsets.top)
         }
     }
 
@@ -272,7 +287,12 @@ public struct StickyScrollView<Content: View>: View {
         ScrollView(axis == .horizontal ? .horizontal : .vertical) {
             content
         }
-        .onScrollGeometryChange(for: CGPoint.self, of: { $0.contentOffset }, action: { scrollCoordinator.scrollContentOffset = $1 })
+        .onScrollGeometryChange(for: CGPoint.self, of: { $0.contentOffset }) {
+            scrollCoordinator.scrollContentOffset = $1
+        }
+        .onScrollGeometryChange(for: EdgeInsets.self, of: { $0.contentInsets }) {
+            scrollCoordinator.scrollContentInsets = $1
+        }
         .scrollPosition($scrollCoordinator.scrollPosition)
         .coordinateSpace(name: stickyCoordinateSpace)  // Define coordinate space for subviews
         .onPreferenceChange(StickyFramePreference.self) {
@@ -339,4 +359,8 @@ public struct StickyScrollView<Content: View>: View {
         .frame(height: 200)
         .background(.orange)
     }
+}
+
+#Preview {
+    ContentView()
 }
