@@ -1,0 +1,19 @@
+//
+//  SettingsViewModel.swift
+//  StickyScrollView
+//
+//  Created by Brandon Michaud on 1/3/26.
+//
+
+import SwiftUI
+
+@Observable final class SettingsViewModel {
+    var shouldStick: Bool = true
+    var scrollAxis: Axis = .vertical
+    var stickyBehavior: StickyBehavior = .replace
+    var numHeaders: Int = 5
+    var numFooters: Int = 5
+    var isTappable: Bool = true
+    var ignoreStartingSafeArea: Bool = false
+    var ignoreEndingSafeArea: Bool = false
+}
