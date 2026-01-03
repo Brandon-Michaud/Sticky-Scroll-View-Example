@@ -18,21 +18,25 @@ fileprivate enum Stickable: EnvironmentKey {
 
 /// A preference used by subviews to communicate their frames to their ``StickyScrollView`` superview
 fileprivate enum StickyFramePreference: PreferenceKey {
-    fileprivate static var defaultValue: [Namespace.ID: CGRect] = [:]
+    fileprivate static var defaultValue: [Namespace.ID: StickyFrame] = [:]
 
     fileprivate static func reduce(value: inout Value, nextValue: () -> Value) {
         value.merge(nextValue()) { $1 }
     }
 }
 
-/// A collection of sticky frames used for subviews in a ``StickyScrollView`` to determine their offset
-fileprivate enum StickyFrames: EnvironmentKey {
-    fileprivate static var defaultValue: [Namespace.ID: CGRect] = [:]
-}
-
 /// The sticky axis used by subviews in a ``StickyScrollView`` to determine their offset
 fileprivate enum StickyAxis: EnvironmentKey {
     fileprivate static var defaultValue: Axis = .vertical
+}
+
+/// The edge whichy a view should stick to
+public enum StickyEdge {
+    /// The top (vertical scroll) or leading (horizontal scroll) edge
+    case starting
+    
+    /// The bottom (vertical scroll) or trailing (horizontal scroll) edge
+    case ending
 }
 
 /// Describes how a ``StickyScrollView`` should handle situations where multiple subviews are sticking
@@ -53,6 +57,17 @@ fileprivate enum StickyBehaviorKey: EnvironmentKey {
     fileprivate static var defaultValue: StickyBehavior = .stack
 }
 
+/// Data representation of a sticky frame and the edge it sticks to
+fileprivate struct StickyFrame: Equatable {
+    fileprivate let frame: CGRect
+    fileprivate let edge: StickyEdge
+}
+
+/// A collection of sticky frames used for subviews in a ``StickyScrollView`` to determine their offset
+fileprivate enum StickyFrames: EnvironmentKey {
+    fileprivate static var defaultValue: [Namespace.ID: StickyFrame] = [:]
+}
+
 /// An object that can control the scroll position of a ``StickyScrollView``
 @Observable fileprivate final class StickyScrollViewCoordinator {
     /// The sticky scroll view scroll position
@@ -63,20 +78,27 @@ fileprivate enum StickyBehaviorKey: EnvironmentKey {
     
     /// The sticky scroll view content insets
     fileprivate var scrollContentInsets: EdgeInsets
+    
+    /// The sticky scroll view container size
+    fileprivate var scrollContainerSize: CGSize
 
     /// Makes a ``StickyScrollViewCoordinator`` with an initial position
     /// - Parameters:
     ///   - scrollPosition: Initial ``ScrollPosition`` of the ``StickyScrollView``
     ///   - scrollContentOffset: Content offset of the ``StickyScrollView``
     ///   - scrollContentInsets: Content insets of the ``StickyScrollView``
+    ///   - scrollContainerSize: Container size of the ``StickyScrollView``
     fileprivate init(
         scrollPosition: ScrollPosition,
         scrollContentOffset: CGPoint = .zero,
-        scrollContentInsets: EdgeInsets = .init()
+        scrollContentInsets: EdgeInsets = .init(),
+        scrollContainerSize: CGSize = .zero,
+        scrollVisibleRect: CGRect = .zero
     ) {
         self.scrollPosition = scrollPosition
         self.scrollContentOffset = scrollContentOffset
         self.scrollContentInsets = scrollContentInsets
+        self.scrollContainerSize = scrollContainerSize
     }
 }
 
@@ -132,77 +154,193 @@ public struct Sticky: ViewModifier {
     // Keep track of the view's frame
     @State private var frame: CGRect = .zero
     
+    private let edge: StickyEdge
     private let isTappable: Bool
     
     /// Creates a view modifier to make content stick to the starting edge
-    /// - Parameter isTappable: Whether or not tapping the sticky content scrolls to it
-    public init(isTappable: Bool = false) {
+    /// - Parameters:
+    ///   - edge: The edge of the ``StickyScrollView`` the view should stick to
+    ///   - isTappable: Whether or not tapping the sticky content scrolls to it
+    public init(edge: StickyEdge = .starting, isTappable: Bool = false) {
+        self.edge = edge
         self.isTappable = isTappable
     }
     
     /// If the view should be sticking
     private var isSticking: Bool {
-        switch stickyAxis {
-        case .horizontal:
-            return frame.minX < stickingMin
-        case .vertical:
-            return frame.minY < stickingMin
+        switch edge {
+        case .starting:
+            switch stickyAxis {
+            case .horizontal:
+                return frame.minX < stickingThreshold
+            case .vertical:
+                return frame.minY < stickingThreshold
+            }
+        case .ending:
+            switch stickyAxis {
+            case .horizontal:
+                return frame.minX > stickingThreshold
+            case .vertical:
+                return frame.minY > stickingThreshold
+            }
         }
     }
     
-    /// The minimum value below which a view will stick
-    private var stickingMin: CGFloat {
-        guard stickyBehavior != .replace else { return 0 }
-        
+    /// The end position of the scroll view
+    private var scrollContainerEnd: CGFloat? {
+        guard let stickyScrollCoordinator else { return nil }
         switch stickyAxis {
         case .horizontal:
-            let otherSticking = stickyFrames.filter { (key, value) in
-                key != id && value.minX <= frame.minX
-            }
-            return otherSticking.reduce(into: 0) { (result, element) in
-                result += element.value.width
-            }
+            return stickyScrollCoordinator.scrollContainerSize.width - stickyScrollCoordinator.scrollContentInsets.trailing
         case .vertical:
-            let otherSticking = stickyFrames.filter { (key, value) in
-                key != id && value.minY <= frame.minY
+            return stickyScrollCoordinator.scrollContainerSize.height - stickyScrollCoordinator.scrollContentInsets.bottom
+        }
+    }
+    
+    /// The minimum/maximum value below/above which a view will stick
+    private var stickingThreshold: CGFloat {
+        // If we do not have the scrollContainerBounds we cannot compute threshold
+        // and the view should not stick
+        guard let scrollContainerEnd else {
+            switch edge {
+            case .starting:
+                return -.infinity
+            case .ending:
+                return .infinity
             }
-            return otherSticking.reduce(into: 0) { (result, element) in
-                result += element.value.height
+        }
+        
+        // If we are replacing views, the thresholds are the edges of the scroll view
+        guard stickyBehavior != .replace else {
+            switch edge {
+            case .starting:
+                return .zero
+            case .ending:
+                return scrollContainerEnd
+            }
+        }
+        
+        switch edge {
+        case .starting:
+            switch stickyAxis {
+            case .horizontal:
+                // Find cumulative width of other sticky frames to the left of this one
+                let otherSticking = stickyFrames.filter { (key, value) in
+                    key != id && value.edge == edge && value.frame.minX <= frame.minX
+                }
+                return otherSticking.reduce(into: 0) { (result, element) in
+                    result += element.value.frame.width
+                }
+            case .vertical:
+                // Find cumulative height of other sticky frames above this one
+                let otherSticking = stickyFrames.filter { (key, value) in
+                    key != id && value.edge == edge && value.frame.minY <= frame.minY
+                }
+                return otherSticking.reduce(into: 0) { (result, element) in
+                    result += element.value.frame.height
+                }
+            }
+        case .ending:
+            switch stickyAxis {
+            case .horizontal:
+                // Find cumulative width of other sticky frames to the right of this one
+                let otherSticking = stickyFrames.filter { (key, value) in
+                    key != id && value.edge == edge && value.frame.maxX >= frame.maxX
+                }
+                return scrollContainerEnd - otherSticking.reduce(into: 0) { (result, element) in
+                    result += element.value.frame.width
+                }
+            case .vertical:
+                // Find cumulative height of other sticky frames below this one
+                let otherSticking = stickyFrames.filter { (key, value) in
+                    key != id && value.edge == edge && value.frame.maxY >= frame.maxY
+                }
+                return scrollContainerEnd - otherSticking.reduce(into: 0) { (result, element) in
+                    result += element.value.frame.height
+                }
             }
         }
     }
     
     /// The offset needed to keep the view visible
     private var offset: CGSize {
-        guard isSticking else { return CGSize.zero }
+        // Do not offset if this view is not yet sticking
+        guard isSticking, let scrollContainerEnd else { return CGSize.zero }
+        
         switch stickyBehavior {
         case .replace:
-            switch stickyAxis {
-            case .horizontal:
-                var offset = -frame.minX
-                if let other = stickyFrames.first(where: { (key, value) in
-                    key != id && value.minX > frame.minX && value.minX < frame.width
-
-                }) {
-                    offset -= frame.width - other.value.minX
+            switch edge {
+            case .starting:
+                switch stickyAxis {
+                case .horizontal:
+                    // Offset so view is at the leading edge
+                    var offset = -frame.minX
+                    
+                    // Find first frame to the right of this view that would collide and
+                    // calculate offset to prevent that
+                    if let other = stickyFrames.first(where: { (key, value) in
+                        key != id && value.edge == edge
+                            && value.frame.minX > frame.minX && value.frame.minX < frame.width
+                    }) {
+                        offset -= frame.width - other.value.frame.minX
+                    }
+                    
+                    return CGSize(width: offset, height: .zero)
+                case .vertical:
+                    // Offset so view is at the top edge
+                    var offset = -frame.minY
+                    
+                    // Find first frame below this view that would collide and
+                    // calculate offset to prevent that
+                    if let other = stickyFrames.first(where: { (key, value) in
+                        key != id && value.edge == edge
+                            && value.frame.minY > frame.minY && value.frame.minY < frame.height
+                    }) {
+                        offset -= frame.height - other.value.frame.minY
+                    }
+                    
+                    return CGSize(width: .zero, height: offset)
                 }
-                return CGSize(width: offset, height: .zero)
-            case .vertical:
-                var offset = -frame.minY
-                if let other = stickyFrames.first(where: { (key, value) in
-                    key != id && value.minY > frame.minY && value.minY < frame.height
-
-                }) {
-                    offset -= frame.height - other.value.minY
+            case .ending:
+                switch stickyAxis {
+                case .horizontal:
+                    // Offset so view is at the trailing edge
+                    var offset = scrollContainerEnd - frame.minX
+                    
+                    // Find first frame to the left of this view that would collide and
+                    // calculate offset to prevent that
+                    if let other = stickyFrames.first(where: { (key, value) in
+                        key != id && value.edge == edge &&
+                            value.frame.minX < frame.minX && scrollContainerEnd - value.frame.minX < frame.width
+                    }) {
+                        offset += frame.width - scrollContainerEnd + other.value.frame.minX
+                    }
+                    
+                    return CGSize(width: offset, height: .zero)
+                case .vertical:
+                    // Offset so view is at the bottom edge
+                    var offset = scrollContainerEnd - frame.minY
+                    
+                    // Find first frame above this view that would collide and
+                    // calculate offset to prevent that
+                    if let other = stickyFrames.first(where: { (key, value) in
+                        key != id && value.edge == edge &&
+                            value.frame.minY < frame.minY && scrollContainerEnd - value.frame.minY < frame.height
+                    }) {
+                        offset += frame.height - scrollContainerEnd + other.value.frame.minY
+                    }
+                    
+                    return CGSize(width: .zero, height: offset)
                 }
-                return CGSize(width: .zero, height: offset)
             }
         case .stack:
             switch stickyAxis {
             case .horizontal:
-                return CGSize(width: -frame.minX + stickingMin, height: .zero)
+                // Offset view to the leading/trailing edge of the stack
+                return CGSize(width: -frame.minX + stickingThreshold, height: .zero)
             case .vertical:
-                return CGSize(width: .zero, height: -frame.minY + stickingMin)
+                // Offset view to the top/bottom edge of the stack
+                return CGSize(width: .zero, height: -frame.minY + stickingThreshold)
             }
         }
     }
@@ -218,9 +356,9 @@ public struct Sticky: ViewModifier {
         
         switch stickyAxis {
         case .horizontal:
-            return CGPoint(x: frame.minX + scrollContentOffset.x - stickingMin + scrollContentInsets.leading, y: .zero)
+            return CGPoint(x: frame.minX + scrollContentOffset.x - stickingThreshold + scrollContentInsets.leading, y: .zero)
         case .vertical:
-            return CGPoint(x: .zero, y: frame.minY + scrollContentOffset.y - stickingMin + scrollContentInsets.top)
+            return CGPoint(x: .zero, y: frame.minY + scrollContentOffset.y - stickingThreshold + scrollContentInsets.top)
         }
     }
 
@@ -235,7 +373,7 @@ public struct Sticky: ViewModifier {
                     Color.clear
                         .onAppear { self.frame = frame }
                         .onChange(of: frame) { self.frame = frame }
-                        .preference(key: StickyFramePreference.self, value: [id: self.frame])
+                        .preference(key: StickyFramePreference.self, value: [id: StickyFrame(frame: self.frame, edge: edge)])
                 })
                 .onTapGesture {
                     if isTappable {
@@ -252,10 +390,12 @@ public struct Sticky: ViewModifier {
 
 public extension View {
     /// Makes view sticky within a ``StickyScrollView``
-    /// - Parameter isTappable: Does tapping scroll to the view
+    /// - Parameters:
+    ///   - edge: The edge to stick to
+    ///   - isTappable: Does tapping scroll to the view
     /// - Returns: The sticky view
-    func sticky(isTappable: Bool = false) -> some View {
-        modifier(Sticky(isTappable: isTappable))
+    func sticky(edge: StickyEdge = .starting, isTappable: Bool = false) -> some View {
+        modifier(Sticky(edge: edge, isTappable: isTappable))
     }
 }
 
@@ -275,7 +415,7 @@ public struct StickyScrollView<Content: View>: View {
     ///   - content: Content of the scroll view
     public init(
         axis: Axis = .vertical,
-        behavior: StickyBehavior = .stack,
+        behavior: StickyBehavior = .replace,
         @ViewBuilder content: () -> Content
     ) {
         self.axis = axis
@@ -292,6 +432,9 @@ public struct StickyScrollView<Content: View>: View {
         }
         .onScrollGeometryChange(for: EdgeInsets.self, of: { $0.contentInsets }) {
             scrollCoordinator.scrollContentInsets = $1
+        }
+        .onScrollGeometryChange(for: CGSize.self, of: { $0.containerSize }) {
+            scrollCoordinator.scrollContainerSize = $1
         }
         .scrollPosition($scrollCoordinator.scrollPosition)
         .coordinateSpace(name: stickyCoordinateSpace)  // Define coordinate space for subviews
@@ -311,7 +454,7 @@ public struct StickyScrollView<Content: View>: View {
         Color.blue
             .frame(height: 100)
         
-        StickyScrollView(axis: .vertical) {
+        StickyScrollView(axis: .vertical, behavior: .stack) {
             VStack {
                 Image(systemName: "globe")
                     .imageScale(.large)
@@ -322,7 +465,7 @@ public struct StickyScrollView<Content: View>: View {
                         .font(.title)
                         .frame(maxWidth: .infinity)
                         .background(.regularMaterial)
-                        .sticky(isTappable: true)
+                        .sticky(edge: .ending, isTappable: true)
                     Text("Heading 2-\(idx)")
                         .font(.title2)
                         .frame(maxWidth: .infinity)
@@ -348,7 +491,7 @@ public struct StickyScrollView<Content: View>: View {
                     .font(.headline)
                     .frame(maxHeight: .infinity)
                     .background(.regularMaterial)
-                    .sticky(isTappable: true)
+                    .sticky(edge: .ending, isTappable: true)
                 Text("Sticky 2-\(idx)")
                     .font(.subheadline)
                     .frame(maxHeight: .infinity)
@@ -359,6 +502,7 @@ public struct StickyScrollView<Content: View>: View {
         .frame(height: 200)
         .background(.orange)
     }
+    .clipped()
 }
 
 #Preview {
