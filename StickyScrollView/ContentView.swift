@@ -66,7 +66,6 @@ struct ContentView: View {
                 )
                 .presentationDetents([.medium])
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding()
             }
         }
     }
@@ -81,73 +80,83 @@ struct SettingsSheetView: View {
     @Binding var isTappable: Bool
     
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Settings")
-                .font(.title2)
-            
-            Toggle("Should Stick", isOn: $shouldStick)
-                .font(.headline)
-            
-            VStack(alignment: .leading) {
-                Text("Scroll Axis")
-                    .font(.headline)
+        StickyScrollView {
+            VStack(spacing: 20) {
+                Text("Settings")
+                    .font(.title2)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(.ultraThinMaterial)
+                    .sticky()
                 
-                Picker("Scroll Axis", selection: $scrollAxis) {
-                    ForEach(Array(Axis.allCases), id: \.self) { axis in
-                        Text(axis.description.capitalized)
+                VStack(spacing: 20) {
+                    Toggle("Should Stick", isOn: $shouldStick)
+                        .font(.headline)
+                    
+                    VStack(alignment: .leading) {
+                        Text("Scroll Axis")
+                            .font(.headline)
+                        
+                        Picker("Scroll Axis", selection: $scrollAxis) {
+                            ForEach(Array(Axis.allCases), id: \.self) { axis in
+                                Text(axis.description.capitalized)
+                            }
+                        }
+                        .pickerStyle(.segmented)
                     }
-                }
-                .pickerStyle(.segmented)
-            }
-            
-            VStack(alignment: .leading) {
-                Text("Sticky Behavior")
-                    .font(.headline)
-                
-                Picker("Sticky Behavior", selection: $stickyBehavior) {
-                    ForEach(Array(StickyBehavior.allCases), id: \.self) { behavior in
-                        Text(behavior.rawValue.capitalized)
+                    
+                    VStack(alignment: .leading) {
+                        Text("Sticky Behavior")
+                            .font(.headline)
+                        
+                        Picker("Sticky Behavior", selection: $stickyBehavior) {
+                            ForEach(Array(StickyBehavior.allCases), id: \.self) { behavior in
+                                Text(behavior.rawValue.capitalized)
+                            }
+                        }
+                        .pickerStyle(.segmented)
                     }
+                    
+                    HStack {
+                        Text("Headers")
+                            .font(.headline)
+                        
+                        Spacer()
+                        
+                        Picker("Headers", selection: $numHeaders) {
+                            ForEach(0...20, id: \.self) { num in
+                                Text("\(num)")
+                                    .tag(num)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    
+                    HStack {
+                        Text("Footers")
+                            .font(.headline)
+                        
+                        Spacer()
+                        
+                        Picker("Footers", selection: $numFooters) {
+                            ForEach(0...20, id: \.self) { num in
+                                Text("\(num)")
+                                    .tag(num)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    
+                    Toggle("Is Tappable", isOn: $isTappable)
+                        .font(.headline)
                 }
-                .pickerStyle(.segmented)
-            }
-            
-            HStack {
-                Text("Headers")
-                    .font(.headline)
+                .padding([.horizontal, .bottom])
                 
                 Spacer()
-                
-                Picker("Headers", selection: $numHeaders) {
-                    ForEach(0...20, id: \.self) { num in
-                        Text("\(num)")
-                            .tag(num)
-                    }
-                }
-                .pickerStyle(.menu)
             }
-            
-            HStack {
-                Text("Footers")
-                    .font(.headline)
-                
-                Spacer()
-                
-                Picker("Footers", selection: $numFooters) {
-                    ForEach(0...20, id: \.self) { num in
-                        Text("\(num)")
-                            .tag(num)
-                    }
-                }
-                .pickerStyle(.menu)
-            }
-            
-            Toggle("Is Tappable", isOn: $isTappable)
-                .font(.headline)
-            
-            Spacer()
         }
-
+        .scrollBounceBehavior(.basedOnSize)
+        .scrollIndicators(.hidden)
     }
 }
 
