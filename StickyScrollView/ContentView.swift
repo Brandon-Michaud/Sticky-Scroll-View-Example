@@ -17,7 +17,11 @@ struct ContentView: View {
                 // We need to redraw entire scroll view when axis changes to avoid multidirectional scroll
                 switch settingsViewModel.scrollAxis {
                 case .horizontal:
-                    StickyScrollView(axis: settingsViewModel.scrollAxis, behavior: settingsViewModel.stickyBehavior) {
+                    StickyScrollView(
+                        axis: settingsViewModel.scrollAxis,
+                        behavior: settingsViewModel.stickyBehavior,
+                        edgesIgnoringSafeArea: settingsViewModel.edgesIgnoringSafeArea
+                    ) {
                         HorizontalScrollContentView(
                             shouldStick: settingsViewModel.shouldStick,
                             numHeaders: settingsViewModel.numHeaders,
@@ -26,7 +30,11 @@ struct ContentView: View {
                         )
                     }
                 case .vertical:
-                    StickyScrollView(axis: settingsViewModel.scrollAxis, behavior: settingsViewModel.stickyBehavior) {
+                    StickyScrollView(
+                        axis: settingsViewModel.scrollAxis,
+                        behavior: settingsViewModel.stickyBehavior,
+                        edgesIgnoringSafeArea: settingsViewModel.edgesIgnoringSafeArea
+                    ) {
                         VerticalScrollContentView(
                             shouldStick: settingsViewModel.shouldStick,
                             numHeaders: settingsViewModel.numHeaders,

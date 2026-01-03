@@ -16,4 +16,15 @@ import SwiftUI
     var isTappable: Bool = true
     var ignoreStartingSafeArea: Bool = false
     var ignoreEndingSafeArea: Bool = false
+    
+    var edgesIgnoringSafeArea: [StickyEdge] {
+        var edges: [StickyEdge] = []
+        if ignoreStartingSafeArea {
+            edges.append(.starting)
+        }
+        if ignoreEndingSafeArea {
+            edges.append(.ending)
+        }
+        return edges
+    }
 }

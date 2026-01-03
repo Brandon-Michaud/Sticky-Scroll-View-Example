@@ -8,9 +8,6 @@
 
 import SwiftUI
 
-/// The coordinate space name used by a ``StickyScrollView``
-fileprivate let stickyCoordinateSpace = "stickyCoordinateSpace"
-
 /// Controls whether the ``Sticky`` view modifier can be applied
 fileprivate enum Stickable: EnvironmentKey {
     fileprivate static var defaultValue: Bool = false
@@ -75,6 +72,9 @@ fileprivate enum StickyFrames: EnvironmentKey {
 
 /// An object that can control the scroll position of a ``StickyScrollView``
 @Observable fileprivate final class StickyScrollViewCoordinator {
+    /// The coordinate space name used by the sticky scroll view
+    fileprivate let coordinateSpace: String
+    
     /// The sticky scroll view scroll position
     fileprivate var scrollPosition: ScrollPosition
     
@@ -89,17 +89,19 @@ fileprivate enum StickyFrames: EnvironmentKey {
 
     /// Makes a ``StickyScrollViewCoordinator`` with an initial position
     /// - Parameters:
+    ///   - coordinateSpace: The name of the coordinate space for the ``StickyScrollView``
     ///   - scrollPosition: Initial ``ScrollPosition`` of the ``StickyScrollView``
     ///   - scrollContentOffset: Content offset of the ``StickyScrollView``
     ///   - scrollContentInsets: Content insets of the ``StickyScrollView``
     ///   - scrollContainerSize: Container size of the ``StickyScrollView``
     fileprivate init(
-        scrollPosition: ScrollPosition,
+        coordinateSpace: String = "stickyCoordinateSpace",
+        scrollPosition: ScrollPosition = ScrollPosition(edge: .top),
         scrollContentOffset: CGPoint = .zero,
         scrollContentInsets: EdgeInsets = .init(),
-        scrollContainerSize: CGSize = .zero,
-        scrollVisibleRect: CGRect = .zero
+        scrollContainerSize: CGSize = .zero
     ) {
+        self.coordinateSpace = coordinateSpace
         self.scrollPosition = scrollPosition
         self.scrollContentOffset = scrollContentOffset
         self.scrollContentInsets = scrollContentInsets
@@ -108,7 +110,7 @@ fileprivate enum StickyFrames: EnvironmentKey {
 }
 
 /// A ``StickyScrollViewCoordinator`` that subviews of a ``StickyScrollView`` can use to control the scroll position
-fileprivate enum StickyScrollPosition: EnvironmentKey {
+fileprivate enum StickyScrollCoordinator: EnvironmentKey {
     fileprivate static var defaultValue: StickyScrollViewCoordinator? = nil
 }
 
@@ -144,15 +146,14 @@ fileprivate extension EnvironmentValues {
     }
     
     /// An optional ``StickyScrollViewCoordinator`` that subviews of a ``StickyScrollView`` can use to control the scroll position
-    var stickyScrollCoordinator: StickyScrollPosition.Value {
-        get { self[StickyScrollPosition.self] }
-        set { self[StickyScrollPosition.self] = newValue }
+    var stickyScrollCoordinator: StickyScrollCoordinator.Value {
+        get { self[StickyScrollCoordinator.self] }
+        set { self[StickyScrollCoordinator.self] = newValue }
     }
 }
 
 /// A view modifier to make some view inside of a ``StickyScrollView`` sticky
 public struct Sticky: ViewModifier {
-    // Used to remove self from sticky frames
     @Namespace private var id
     
     // Collect offset rendering information
@@ -219,7 +220,6 @@ public struct Sticky: ViewModifier {
             case .horizontal:
                 return safeAreaInsets.leading
             case .vertical:
-                print(safeAreaInsets.top)
                 return safeAreaInsets.top
             }
         case .ending:
@@ -406,20 +406,24 @@ public struct Sticky: ViewModifier {
         
         switch stickyAxis {
         case .horizontal:
-            return CGPoint(x: frame.minX + scrollContentOffset.x - stickingThreshold + scrollContentInsets.leading, y: .zero)
+            let startingAnchor = frame.minX + scrollContentOffset.x - stickingThreshold + scrollContentInsets.leading
+            let anchorOffset = edge == .ending ? frame.width : .zero
+            return CGPoint(x: startingAnchor + anchorOffset, y: .zero)
         case .vertical:
-            return CGPoint(x: .zero, y: frame.minY + scrollContentOffset.y - stickingThreshold + scrollContentInsets.top)
+            let startingAnchor = frame.minY + scrollContentOffset.y - stickingThreshold + scrollContentInsets.top
+            let anchorOffset = edge == .ending ? frame.height : .zero
+            return CGPoint(x: .zero, y: startingAnchor + anchorOffset)
         }
     }
 
     public func body(content: Content) -> some View {
-        if isStickable {
+        if isStickable, let coordinateSpace = stickyScrollCoordinator?.coordinateSpace {
             content
                 .id(id)
                 .offset(offset)
                 .zIndex(isSticking ? .infinity : 0)  // If the view is sticking, it should appear above all others
                 .overlay(GeometryReader { geometry in
-                    let frame = geometry.frame(in: .named(stickyCoordinateSpace))
+                    let frame = geometry.frame(in: .named(coordinateSpace))
                     Color.clear
                         .onAppear { self.frame = frame }
                         .onChange(of: frame) { self.frame = frame }
@@ -457,7 +461,7 @@ public struct StickyScrollView<Content: View>: View {
     private let content: Content
     
     @State private var frames: StickyFrames.Value = [:]
-    @State private var scrollCoordinator = StickyScrollViewCoordinator(scrollPosition: ScrollPosition(edge: .top))
+    @State private var scrollCoordinator = StickyScrollViewCoordinator()
     
     /// Creates a ``ScrollView`` that allows content to stick once it reaches the starting edge
     /// - Parameters:
@@ -491,7 +495,7 @@ public struct StickyScrollView<Content: View>: View {
             scrollCoordinator.scrollContainerSize = $1
         }
         .scrollPosition($scrollCoordinator.scrollPosition)
-        .coordinateSpace(name: stickyCoordinateSpace)  // Define coordinate space for subviews
+        .coordinateSpace(name: scrollCoordinator.coordinateSpace)  // Define coordinate space for subviews
         .onPreferenceChange(StickyFramePreference.self) {
             frames = $0  // Collect individual frames from subviews
         }
