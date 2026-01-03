@@ -179,9 +179,9 @@ public struct Sticky: ViewModifier {
         case .ending:
             switch stickyAxis {
             case .horizontal:
-                return frame.minX > stickingThreshold
+                return frame.maxX > stickingThreshold
             case .vertical:
-                return frame.minY > stickingThreshold
+                return frame.maxY > stickingThreshold
             }
         }
     }
@@ -191,9 +191,9 @@ public struct Sticky: ViewModifier {
         guard let stickyScrollCoordinator else { return nil }
         switch stickyAxis {
         case .horizontal:
-            return stickyScrollCoordinator.scrollContainerSize.width - stickyScrollCoordinator.scrollContentInsets.trailing
+            return stickyScrollCoordinator.scrollContainerSize.width
         case .vertical:
-            return stickyScrollCoordinator.scrollContainerSize.height - stickyScrollCoordinator.scrollContentInsets.bottom
+            return stickyScrollCoordinator.scrollContainerSize.height
         }
     }
     
@@ -305,42 +305,54 @@ public struct Sticky: ViewModifier {
                 switch stickyAxis {
                 case .horizontal:
                     // Offset so view is at the trailing edge
-                    var offset = scrollContainerEnd - frame.minX
+                    var offset = scrollContainerEnd - frame.maxX
                     
                     // Find first frame to the left of this view that would collide and
                     // calculate offset to prevent that
                     if let other = stickyFrames.first(where: { (key, value) in
                         key != id && value.edge == edge &&
-                            value.frame.minX < frame.minX && scrollContainerEnd - value.frame.minX < frame.width
+                            value.frame.minX < frame.minX && scrollContainerEnd - value.frame.maxX < frame.width
                     }) {
-                        offset += frame.width - scrollContainerEnd + other.value.frame.minX
+                        offset += frame.width - scrollContainerEnd + other.value.frame.maxX
                     }
                     
                     return CGSize(width: offset, height: .zero)
                 case .vertical:
                     // Offset so view is at the bottom edge
-                    var offset = scrollContainerEnd - frame.minY
+                    var offset = scrollContainerEnd - frame.maxY
                     
                     // Find first frame above this view that would collide and
                     // calculate offset to prevent that
                     if let other = stickyFrames.first(where: { (key, value) in
                         key != id && value.edge == edge &&
-                            value.frame.minY < frame.minY && scrollContainerEnd - value.frame.minY < frame.height
+                            value.frame.minY < frame.minY && scrollContainerEnd - value.frame.maxY < frame.height
                     }) {
-                        offset += frame.height - scrollContainerEnd + other.value.frame.minY
+                        offset += frame.height - scrollContainerEnd + other.value.frame.maxY
                     }
                     
                     return CGSize(width: .zero, height: offset)
                 }
             }
         case .stack:
-            switch stickyAxis {
-            case .horizontal:
-                // Offset view to the leading/trailing edge of the stack
-                return CGSize(width: -frame.minX + stickingThreshold, height: .zero)
-            case .vertical:
-                // Offset view to the top/bottom edge of the stack
-                return CGSize(width: .zero, height: -frame.minY + stickingThreshold)
+            switch edge {
+            case .starting:
+                switch stickyAxis {
+                case .horizontal:
+                    // Offset view to the leading/trailing edge of the stack
+                    return CGSize(width: -frame.minX + stickingThreshold, height: .zero)
+                case .vertical:
+                    // Offset view to the top/bottom edge of the stack
+                    return CGSize(width: .zero, height: -frame.minY + stickingThreshold)
+                }
+            case .ending:
+                switch stickyAxis {
+                case .horizontal:
+                    // Offset view to the leading/trailing edge of the stack
+                    return CGSize(width: -frame.maxX + stickingThreshold, height: .zero)
+                case .vertical:
+                    // Offset view to the top/bottom edge of the stack
+                    return CGSize(width: .zero, height: -frame.maxY + stickingThreshold)
+                }
             }
         }
     }
@@ -476,11 +488,14 @@ public struct StickyScrollView<Content: View>: View {
             }
             .background(.orange)
         }
+        
+        Color.blue
+            .frame(height: 100)
     }
 }
 
 #Preview {
-    StickyScrollView(axis: .horizontal, behavior: .stack) {
+    StickyScrollView(axis: .horizontal, behavior: .replace) {
         HStack {
             Image(systemName: "globe")
                 .imageScale(.large)
