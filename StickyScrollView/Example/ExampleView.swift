@@ -98,7 +98,9 @@ struct HorizontalScrollContentView: View {
                         .padding(5)
                         .background(Color(uiColor: .systemGroupedBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .sticky(edge: .starting, isTappable: isTappable)
+                        .sticky(edge: .starting, isTappable: isTappable) {
+                            print("Tapped header \(idx)")
+                        }
                 } else {
                     Text("🏒 \(idx)")
                         .font(.headline)
@@ -119,7 +121,9 @@ struct HorizontalScrollContentView: View {
                         .padding(5)
                         .background(Color(uiColor: .systemGroupedBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .sticky(edge: .ending, isTappable: isTappable)
+                        .sticky(edge: .ending, isTappable: isTappable) {
+                            print("Tapped footer \(idx)")
+                        }
                 } else {
                     Text("🥍 \(idx)")
                         .font(.headline)
@@ -155,7 +159,9 @@ struct VerticalScrollContentView: View {
                         .frame(maxWidth: .infinity)
                         .background(Color(uiColor: .systemGroupedBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .sticky(edge: .starting, isTappable: isTappable)
+                        .sticky(edge: .starting, isTappable: isTappable) {
+                            print("Tapped header \(idx)")
+                        }
                 } else {
                     Text("Header \(idx)")
                         .font(.title)
@@ -174,7 +180,9 @@ struct VerticalScrollContentView: View {
                         .frame(maxWidth: .infinity)
                         .background(Color(uiColor: .systemGroupedBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .sticky(edge: .ending, isTappable: isTappable)
+                        .sticky(edge: .ending, isTappable: isTappable) {
+                            print("Tapped footer \(idx)")
+                        }
                 } else {
                     Text("Footer \(idx)")
                         .font(.title)
