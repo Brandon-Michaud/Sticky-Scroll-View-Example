@@ -18,6 +18,9 @@ import SwiftUI
     /// The sticky scroll view content offset
     var scrollContentOffset: CGPoint
     
+    /// The sticky scroll view content size
+    var scrollContentSize: CGSize
+    
     /// The sticky scroll view content insets
     var scrollContentInsets: EdgeInsets
     
@@ -29,18 +32,21 @@ import SwiftUI
     ///   - coordinateSpace: The name of the coordinate space for the ``StickyScrollView``
     ///   - scrollPosition: Initial ``ScrollPosition`` of the ``StickyScrollView``
     ///   - scrollContentOffset: Content offset of the ``StickyScrollView``
+    ///   - scrollContentSize: Content size of the ``StickyScrollView``
     ///   - scrollContentInsets: Content insets of the ``StickyScrollView``
     ///   - scrollContainerSize: Container size of the ``StickyScrollView``
     init(
         coordinateSpace: String = "stickyCoordinateSpace",
         scrollPosition: ScrollPosition = ScrollPosition(edge: .top),
         scrollContentOffset: CGPoint = .zero,
+        scrollContentSize: CGSize = .zero,
         scrollContentInsets: EdgeInsets = .init(),
         scrollContainerSize: CGSize = .zero
     ) {
         self.coordinateSpace = coordinateSpace
         self.scrollPosition = scrollPosition
         self.scrollContentOffset = scrollContentOffset
+        self.scrollContentSize = scrollContentSize
         self.scrollContentInsets = scrollContentInsets
         self.scrollContainerSize = scrollContainerSize
     }

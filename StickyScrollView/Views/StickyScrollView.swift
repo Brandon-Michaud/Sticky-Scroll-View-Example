@@ -43,6 +43,9 @@ public struct StickyScrollView<Content: View>: View {
         .onScrollGeometryChange(for: CGPoint.self, of: { $0.contentOffset }) {
             scrollCoordinator.scrollContentOffset = $1
         }
+        .onScrollGeometryChange(for: CGSize.self, of: { $0.contentSize }) {
+            scrollCoordinator.scrollContentSize = $1
+        }
         .onScrollGeometryChange(for: EdgeInsets.self, of: { $0.contentInsets }) {
             scrollCoordinator.scrollContentInsets = $1
         }

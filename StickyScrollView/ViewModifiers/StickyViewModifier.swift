@@ -270,13 +270,28 @@ public struct StickyViewModifier: ViewModifier {
             return CGPoint(x: .zero, y: startingAnchor + anchorOffset)
         }
     }
+    
+    /// The zIndex to render the view at
+    private var zIndex: Double {
+        let contentSize = stickyScrollCoordinator?.scrollContentSize.height ?? .infinity
+        let zIndex: Double
+        switch edge {
+        case .starting:
+            // Earlier views should be rendered below
+            zIndex = contentSize + frame.minY
+        case .ending:
+            // Later views should be rendered above
+            zIndex = contentSize - frame.maxY
+        }
+        return isSticking ? zIndex : 0
+    }
 
     public func body(content: Content) -> some View {
         if isStickable, let coordinateSpace = stickyScrollCoordinator?.coordinateSpace {
             content
                 .id(id)
                 .offset(offset)
-                .zIndex(isSticking ? .infinity : 0)  // If the view is sticking, it should appear above all others
+                .zIndex(zIndex)  // If the view is sticking, it should appear above all others
                 .overlay(GeometryReader { geometry in
                     let frame = geometry.frame(in: .named(coordinateSpace))
                     Color.clear
