@@ -12,13 +12,22 @@ public extension View {
     /// - Parameters:
     ///   - edge: The edge to stick to
     ///   - isTappable: Does tapping scroll to the view
-    ///   - onTap: Optional closure to execute when a sticky view is tapped
+    ///   - onTap: Optional closure to execute when the view is tapped
+    ///   - onStickChange: Optional closure to execute when the view sticks or unsticks
     /// - Returns: The sticky view
     func sticky(
         edge: StickyEdge = .starting,
         isTappable: Bool = false,
-        onTap: (() -> Void)? = nil
+        onTap: (() -> Void)? = nil,
+        onStickChange: ((Bool) -> Void)? = nil
     ) -> some View {
-        modifier(StickyViewModifier(edge: edge, isTappable: isTappable, onTap: onTap))
+        modifier(
+            StickyViewModifier(
+                edge: edge,
+                isTappable: isTappable,
+                onTap: onTap,
+                onStickChange: onStickChange
+            )
+        )
     }
 }

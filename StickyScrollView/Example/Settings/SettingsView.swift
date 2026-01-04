@@ -86,6 +86,12 @@ struct SettingsView: View {
                     
                     Toggle("Ignore Ending Safe Area", isOn: $viewModel.ignoreEndingSafeArea)
                         .font(.headline)
+                    
+                    Toggle("Grow On Tap", isOn: $viewModel.growOnTap)
+                        .font(.headline)
+                    
+                    Toggle("Invert On Stick", isOn: $viewModel.invertOnStick)
+                        .font(.headline)
                 }
                 .padding([.horizontal, .bottom])
                 

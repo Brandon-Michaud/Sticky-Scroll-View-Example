@@ -25,20 +25,24 @@ public struct StickyViewModifier: ViewModifier {
     private let edge: StickyEdge
     private let isTappable: Bool
     private let onTap: (() -> Void)?
+    private let onStickChange: ((Bool) -> Void)?
     
     /// Creates a view modifier to make content stick to the starting edge
     /// - Parameters:
     ///   - edge: The edge of the ``StickyScrollView`` the view should stick to
     ///   - isTappable: Whether or not tapping the sticky content scrolls to it
-    ///   - onTap: Optional closure to execute when a sticky view is tapped
+    ///   - onTap: Optional closure to execute when the view is tapped
+    ///   - onStickChange: Optional closure to execute when the view sticks or unsticks
     public init(
         edge: StickyEdge = .starting,
         isTappable: Bool = false,
-        onTap: (() -> Void)? = nil
+        onTap: (() -> Void)? = nil,
+        onStickChange: ((Bool) -> Void)? = nil
     ) {
         self.edge = edge
         self.isTappable = isTappable
         self.onTap = onTap
+        self.onStickChange = onStickChange
     }
     
     /// If the view should be sticking
@@ -314,6 +318,9 @@ public struct StickyViewModifier: ViewModifier {
                             stickyScrollCoordinator?.scrollPosition.scrollTo(point: scrollPosition)
                         }
                     }
+                }
+                .onChange(of: isSticking) {
+                    onStickChange?(isSticking)
                 }
         } else {
             content
