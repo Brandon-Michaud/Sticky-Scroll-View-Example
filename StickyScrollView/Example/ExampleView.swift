@@ -94,6 +94,7 @@ fileprivate struct StickyExampleViewModifier: ViewModifier {
     
     fileprivate func body(content: Content) -> some View {
         content
+            .modifier(InvertedViewModifier(shouldInvert: invertOnStick && isSticking))
             .scaleEffect(isPressed ? 1.15 : 1.0)
             .sticky(edge: edge, isTappable: isTappable) {
                 if growOnTap {
@@ -112,6 +113,19 @@ fileprivate struct StickyExampleViewModifier: ViewModifier {
             } onStickChange: { isSticking in
                 self.isSticking = isSticking
             }
+    }
+}
+
+fileprivate struct InvertedViewModifier: ViewModifier {
+    fileprivate let shouldInvert: Bool
+    
+    fileprivate func body(content: Content) -> some View {
+        if shouldInvert {
+            content
+                .colorInvert()
+        } else {
+            content
+        }
     }
 }
 
