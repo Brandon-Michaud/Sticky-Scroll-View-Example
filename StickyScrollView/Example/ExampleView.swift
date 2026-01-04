@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  ExampleView.swift
 //  StickyScrollView
 //
 //  Created by Brandon Michaud on 12/31/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct ExampleView: View {
     @State private var shouldShowSheet: Bool = false
     @State private var settingsViewModel = SettingsViewModel()
     
@@ -191,5 +191,5 @@ struct VerticalScrollContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ExampleView()
 }
