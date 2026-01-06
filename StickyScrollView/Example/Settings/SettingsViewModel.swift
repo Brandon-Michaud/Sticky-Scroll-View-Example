@@ -22,10 +22,10 @@ import SwiftUI
     var edgesIgnoringSafeArea: [StickyEdge] {
         var edges: [StickyEdge] = []
         if ignoreStartingSafeArea {
-            edges.append(.starting)
+            edges.append(.topLeading)
         }
         if ignoreEndingSafeArea {
-            edges.append(.ending)
+            edges.append(.bottomTrailing)
         }
         return edges
     }

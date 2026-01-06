@@ -16,7 +16,7 @@ public extension View {
     ///   - onStickChange: Optional closure to execute when the view sticks or unsticks
     /// - Returns: The sticky view
     func sticky(
-        edge: StickyEdge = .starting,
+        edge: StickyEdge = .topLeading,
         isTappable: Bool = false,
         onTap: (() -> Void)? = nil,
         onStickChange: ((Bool) -> Void)? = nil

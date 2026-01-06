@@ -34,7 +34,7 @@ public struct StickyViewModifier: ViewModifier {
     ///   - onTap: Optional closure to execute when the view is tapped
     ///   - onStickChange: Optional closure to execute when the view sticks or unsticks
     public init(
-        edge: StickyEdge = .starting,
+        edge: StickyEdge = .topLeading,
         isTappable: Bool = false,
         onTap: (() -> Void)? = nil,
         onStickChange: ((Bool) -> Void)? = nil
@@ -89,14 +89,14 @@ public struct StickyViewModifier: ViewModifier {
         guard let safeAreaInsets = stickyScrollCoordinator?.scrollContentInsets else { return .zero }
         guard stickyEdgesIgnoringSafeArea.contains(edge) else { return .zero }
         switch edge {
-        case .starting:
+        case .topLeading:
             switch stickyAxis {
             case .horizontal:
                 return safeAreaInsets.leading
             case .vertical:
                 return safeAreaInsets.top
             }
-        case .ending:
+        case .bottomTrailing:
             switch stickyAxis {
             case .horizontal:
                 return safeAreaInsets.trailing
@@ -118,11 +118,11 @@ public struct StickyViewModifier: ViewModifier {
         switch stickyAxis {
         case .horizontal:
             let startingAnchor = frame.minX + scrollContentOffset.x - transformer.stickingThreshold + scrollContentInsets.leading
-            let anchorOffset = edge == .ending ? frame.width : .zero
+            let anchorOffset = edge == .bottomTrailing ? frame.width : .zero
             return CGPoint(x: startingAnchor + anchorOffset, y: .zero)
         case .vertical:
             let startingAnchor = frame.minY + scrollContentOffset.y - transformer.stickingThreshold + scrollContentInsets.top
-            let anchorOffset = edge == .ending ? frame.height : .zero
+            let anchorOffset = edge == .bottomTrailing ? frame.height : .zero
             return CGPoint(x: .zero, y: startingAnchor + anchorOffset)
         }
     }
@@ -132,10 +132,10 @@ public struct StickyViewModifier: ViewModifier {
         let contentSize = stickyScrollCoordinator?.scrollContentSize.height ?? .infinity
         let zIndex: Double
         switch edge {
-        case .starting:
+        case .topLeading:
             // Earlier views should be rendered lower
             zIndex = contentSize + frame.minY
-        case .ending:
+        case .bottomTrailing:
             // Later views should be rendered lower
             zIndex = contentSize - frame.maxY
         }

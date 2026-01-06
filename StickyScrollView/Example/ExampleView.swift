@@ -149,7 +149,7 @@ fileprivate struct HorizontalScrollContentView: View {
                         .modifier(
                             StickyExampleViewModifier(
                                 num: idx,
-                                edge: .starting,
+                                edge: .topLeading,
                                 isTappable: isTappable,
                                 growOnTap: growOnTap,
                                 invertOnStick: invertOnStick
@@ -168,7 +168,7 @@ fileprivate struct HorizontalScrollContentView: View {
                         .modifier(
                             StickyExampleViewModifier(
                                 num: idx,
-                                edge: .ending,
+                                edge: .bottomTrailing,
                                 isTappable: isTappable,
                                 growOnTap: growOnTap,
                                 invertOnStick: invertOnStick
@@ -231,7 +231,7 @@ fileprivate struct VerticalScrollContentView: View {
                         .modifier(
                             StickyExampleViewModifier(
                                 num: idx,
-                                edge: .starting,
+                                edge: .topLeading,
                                 isTappable: isTappable,
                                 growOnTap: growOnTap,
                                 invertOnStick: invertOnStick
@@ -251,7 +251,7 @@ fileprivate struct VerticalScrollContentView: View {
                         .modifier(
                             StickyExampleViewModifier(
                                 num: idx,
-                                edge: .ending,
+                                edge: .bottomTrailing,
                                 isTappable: isTappable,
                                 growOnTap: growOnTap,
                                 invertOnStick: invertOnStick

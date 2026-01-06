@@ -32,14 +32,14 @@ struct ReplaceStickyTransformer: StickyTransforming {
     /// If the view should be sticking
     var isSticking: Bool {
         switch frame.edge {
-        case .starting:
+        case .topLeading:
             switch axis {
             case .horizontal:
                 return frame.frame.minX < stickingThreshold
             case .vertical:
                 return frame.frame.minY < stickingThreshold
             }
-        case .ending:
+        case .bottomTrailing:
             switch axis {
             case .horizontal:
                 return frame.frame.maxX > stickingThreshold
@@ -52,9 +52,9 @@ struct ReplaceStickyTransformer: StickyTransforming {
     /// The minimum/maximum value below/above which a view will stick
     var stickingThreshold: CGFloat {
         switch frame.edge {
-        case .starting:
+        case .topLeading:
             return .zero - safeAreaInset
-        case .ending:
+        case .bottomTrailing:
             return scrollContainerEnd + safeAreaInset
         }
     }
@@ -65,7 +65,7 @@ struct ReplaceStickyTransformer: StickyTransforming {
         guard isSticking else { return CGSize.zero }
         
         switch frame.edge {
-        case .starting:
+        case .topLeading:
             switch axis {
             case .horizontal:
                 // Offset so view is at the leading edge
@@ -96,7 +96,7 @@ struct ReplaceStickyTransformer: StickyTransforming {
                 
                 return CGSize(width: .zero, height: offset)
             }
-        case .ending:
+        case .bottomTrailing:
             switch axis {
             case .horizontal:
                 // Offset so view is at the trailing edge

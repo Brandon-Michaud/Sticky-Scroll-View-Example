@@ -32,14 +32,14 @@ struct StackStickyTransformer: StickyTransforming {
     /// If the view should be sticking
     var isSticking: Bool {
         switch frame.edge {
-        case .starting:
+        case .topLeading:
             switch axis {
             case .horizontal:
                 return frame.frame.minX < stickingThreshold
             case .vertical:
                 return frame.frame.minY < stickingThreshold
             }
-        case .ending:
+        case .bottomTrailing:
             switch axis {
             case .horizontal:
                 return frame.frame.maxX > stickingThreshold
@@ -52,7 +52,7 @@ struct StackStickyTransformer: StickyTransforming {
     /// The minimum/maximum value below/above which a view will stick
     var stickingThreshold: CGFloat {
         switch frame.edge {
-        case .starting:
+        case .topLeading:
             switch axis {
             case .horizontal:
                 // Find cumulative width of other sticky frames to the left of this one
@@ -71,7 +71,7 @@ struct StackStickyTransformer: StickyTransforming {
                     result += element.frame.height
                 }
             }
-        case .ending:
+        case .bottomTrailing:
             switch axis {
             case .horizontal:
                 // Find cumulative width of other sticky frames to the right of this one
@@ -99,7 +99,7 @@ struct StackStickyTransformer: StickyTransforming {
         guard isSticking else { return CGSize.zero }
         
         switch frame.edge {
-        case .starting:
+        case .topLeading:
             switch axis {
             case .horizontal:
                 // Offset view to the leading/trailing edge of the stack
@@ -108,7 +108,7 @@ struct StackStickyTransformer: StickyTransforming {
                 // Offset view to the top/bottom edge of the stack
                 return CGSize(width: .zero, height: -frame.frame.minY + stickingThreshold)
             }
-        case .ending:
+        case .bottomTrailing:
             switch axis {
             case .horizontal:
                 // Offset view to the leading/trailing edge of the stack
