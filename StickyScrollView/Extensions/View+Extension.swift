@@ -31,3 +31,12 @@ public extension View {
         )
     }
 }
+
+extension View {
+    /// Transforms a view according to the provided Sticky Transformer
+    /// - Parameter transformer: The transforming used to transform the view
+    /// - Returns: The transformed view
+    func stickyTransform(using transformer: StickyTransforming) -> some View {
+        return AnyView(transformer.stickyTransform(content: self))
+    }
+}
