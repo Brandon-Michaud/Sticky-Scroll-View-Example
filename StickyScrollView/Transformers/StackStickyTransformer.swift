@@ -9,12 +9,19 @@ import SwiftUI
 
 /// A transformer that will stack previous sticky views
 struct StackStickyTransformer: StickyTransforming {
-    let axis: Axis
-    let scrollContainerEnd: CGFloat
-    let safeAreaInset: CGFloat
-    let frame: StickyFrame
-    let otherFrames: [StickyFrame]
+    fileprivate let axis: Axis
+    fileprivate let scrollContainerEnd: CGFloat
+    fileprivate let safeAreaInset: CGFloat
+    fileprivate let frame: StickyFrame
+    fileprivate let otherFrames: [StickyFrame]
     
+    /// Creates sticky transformer for the stack behavior
+    /// - Parameters:
+    ///   - axis: The axis of scroll
+    ///   - scrollContainerEnd: The end position of the ``StickyScrollView``
+    ///   - safeAreaInset: The safe area inset of the ``StickyScrollView``
+    ///   - frame: The sticky frame that should be transformed
+    ///   - otherFrames: Other sticky frames in the ``StickyScrollView``
     init(
         axis: Axis,
         scrollContainerEnd: CGFloat,
@@ -47,6 +54,11 @@ struct StackStickyTransformer: StickyTransforming {
                 return frame.frame.maxY > stickingThreshold
             }
         }
+    }
+    
+    /// If the view should use a custom zIndex
+    var shouldOverlay: Bool {
+        return isSticking
     }
     
     /// The minimum/maximum value below/above which a view will stick
@@ -94,32 +106,35 @@ struct StackStickyTransformer: StickyTransforming {
     }
     
     /// The offset needed to keep the view visible
-    var offset: CGSize {
+    fileprivate var offset: CGSize {
         // Do not offset if this view is not yet sticking
-        guard isSticking else { return CGSize.zero }
+        guard isSticking else { return .zero }
         
         switch frame.edge {
         case .topLeading:
             switch axis {
             case .horizontal:
-                // Offset view to the leading/trailing edge of the stack
+                // Offset view to the leading edge of the stack
                 return CGSize(width: -frame.frame.minX + stickingThreshold, height: .zero)
             case .vertical:
-                // Offset view to the top/bottom edge of the stack
+                // Offset view to the top edge of the stack
                 return CGSize(width: .zero, height: -frame.frame.minY + stickingThreshold)
             }
         case .bottomTrailing:
             switch axis {
             case .horizontal:
-                // Offset view to the leading/trailing edge of the stack
+                // Offset view to the trailing edge of the stack
                 return CGSize(width: -frame.frame.maxX + stickingThreshold, height: .zero)
             case .vertical:
-                // Offset view to the top/bottom edge of the stack
+                // Offset view to the bottom edge of the stack
                 return CGSize(width: .zero, height: -frame.frame.maxY + stickingThreshold)
             }
         }
     }
     
+    /// Transforms a view for the stack behavior
+    /// - Parameter content: The view to be transformed
+    /// - Returns: The transformed view
     func stickyTransform<Content>(content: Content) -> any View where Content : View {
         content
             .offset(offset)

@@ -62,6 +62,14 @@ public struct StickyViewModifier: ViewModifier {
                 frame: StickyFrame(frame: frame, edge: edge),
                 otherFrames: otherFrames
             )
+        case .fadeOut:
+            return FadeOutStickyTransformer(
+                axis: stickyAxis,
+                scrollContainerEnd: scrollContainerEnd,
+                safeAreaInset: safeAreaInset,
+                frame: StickyFrame(frame: frame, edge: edge),
+                otherFrames: otherFrames
+            )
         case .stack:
             return StackStickyTransformer(
                 axis: stickyAxis,
@@ -129,25 +137,36 @@ public struct StickyViewModifier: ViewModifier {
     
     /// The zIndex to render the view at
     private var zIndex: Double {
-        let contentSize = stickyScrollCoordinator?.scrollContentSize.height ?? .infinity
+        guard let contentSize = stickyScrollCoordinator?.scrollContentSize else { return .infinity }
+        
         let zIndex: Double
         switch edge {
         case .topLeading:
             // Earlier views should be rendered lower
-            zIndex = contentSize + frame.minY
+            switch stickyAxis {
+            case .horizontal:
+                zIndex = contentSize.width + frame.minX
+            case .vertical:
+                zIndex = contentSize.height + frame.minY
+            }
         case .bottomTrailing:
             // Later views should be rendered lower
-            zIndex = contentSize - frame.maxY
+            switch stickyAxis {
+            case .horizontal:
+                zIndex = contentSize.width - frame.maxX
+            case .vertical:
+                zIndex = contentSize.height - frame.maxY
+            }
         }
-        return transformer.isSticking ? zIndex : 0
+        return transformer.shouldOverlay ? zIndex : 0
     }
 
     public func body(content: Content) -> some View {
         if isStickable, let coordinateSpace = stickyScrollCoordinator?.coordinateSpace {
             content
                 .id(id)
-                .stickyTransform(using: transformer)
                 .zIndex(zIndex)  // If the view is sticking, it should appear above all others
+                .stickyTransform(using: transformer)
                 .overlay(GeometryReader { geometry in
                     let frame = geometry.frame(in: .named(coordinateSpace))
                     Color.clear

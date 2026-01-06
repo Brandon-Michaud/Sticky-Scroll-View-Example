@@ -9,12 +9,19 @@ import SwiftUI
 
 /// A transformer that will replace previous sticky views
 struct ReplaceStickyTransformer: StickyTransforming {
-    let axis: Axis
-    let scrollContainerEnd: CGFloat
-    let safeAreaInset: CGFloat
-    let frame: StickyFrame
-    let otherFrames: [StickyFrame]
+    fileprivate let axis: Axis
+    fileprivate let scrollContainerEnd: CGFloat
+    fileprivate let safeAreaInset: CGFloat
+    fileprivate let frame: StickyFrame
+    fileprivate let otherFrames: [StickyFrame]
     
+    /// Creates sticky transformer for the replace behavior
+    /// - Parameters:
+    ///   - axis: The axis of scroll
+    ///   - scrollContainerEnd: The end position of the ``StickyScrollView``
+    ///   - safeAreaInset: The safe area inset of the ``StickyScrollView``
+    ///   - frame: The sticky frame that should be transformed
+    ///   - otherFrames: Other sticky frames in the ``StickyScrollView``
     init(
         axis: Axis,
         scrollContainerEnd: CGFloat,
@@ -49,6 +56,11 @@ struct ReplaceStickyTransformer: StickyTransforming {
         }
     }
     
+    /// If the view should use a custom zIndex
+    var shouldOverlay: Bool {
+        return isSticking
+    }
+    
     /// The minimum/maximum value below/above which a view will stick
     var stickingThreshold: CGFloat {
         switch frame.edge {
@@ -60,9 +72,9 @@ struct ReplaceStickyTransformer: StickyTransforming {
     }
         
     /// The offset needed to keep the view visible
-    var offset: CGSize {
+    fileprivate var offset: CGSize {
         // Do not offset if this view is not yet sticking
-        guard isSticking else { return CGSize.zero }
+        guard isSticking else { return .zero }
         
         switch frame.edge {
         case .topLeading:
@@ -104,9 +116,7 @@ struct ReplaceStickyTransformer: StickyTransforming {
                 
                 // Find first frame to the left of this view that would collide and
                 // calculate offset to prevent that
-                // TODO: There is a bug here because every single sticking frame with find the same "other"
-                // TODO: We really need the "other" frame with the maximum minX
-                if let other = otherFrames.first(where: { value in
+                if let other = otherFrames.last(where: { value in
                     value.edge == frame.edge && value.frame.minX < frame.frame.minX
                         && stickingThreshold - value.frame.maxX < frame.frame.width
                 }) {
@@ -120,9 +130,7 @@ struct ReplaceStickyTransformer: StickyTransforming {
                 
                 // Find first frame above this view that would collide and
                 // calculate offset to prevent that
-                // TODO: There is a bug here because every single sticking frame with find the same "other"
-                // TODO: We really need the "other" frame with the maximum minY
-                if let other = otherFrames.first(where: { value in
+                if let other = otherFrames.last(where: { value in
                     value.edge == frame.edge && value.frame.minY < frame.frame.minY
                         && stickingThreshold - value.frame.maxY < frame.frame.height
                 }) {
@@ -134,6 +142,9 @@ struct ReplaceStickyTransformer: StickyTransforming {
         }
     }
     
+    /// Transforms a view for the replace behavior
+    /// - Parameter content: The view to be transformed
+    /// - Returns: The transformed view
     func stickyTransform<Content: View>(content: Content) -> any View {
         content
             .offset(offset)

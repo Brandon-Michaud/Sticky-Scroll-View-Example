@@ -71,7 +71,7 @@ public struct StickyScrollView<Content: View>: View {
         Color.blue
             .frame(height: 100)
         
-        StickyScrollView(axis: .vertical, behavior: .stack) {
+        StickyScrollView(axis: .vertical, behavior: .fadeOut) {
             VStack {
                 Image(systemName: "globe")
                     .imageScale(.large)
@@ -82,7 +82,7 @@ public struct StickyScrollView<Content: View>: View {
                         .font(.title)
                         .frame(maxWidth: .infinity)
                         .background(.regularMaterial)
-                        .sticky(edge: .bottomTrailing, isTappable: true)
+                        .sticky(edge: .topLeading, isTappable: true)
                     Text("Heading 2-\(idx)")
                         .font(.title2)
                         .frame(maxWidth: .infinity)
@@ -100,7 +100,7 @@ public struct StickyScrollView<Content: View>: View {
 }
 
 #Preview {
-    StickyScrollView(axis: .horizontal, behavior: .replace) {
+    StickyScrollView(axis: .horizontal, behavior: .fadeOut) {
         HStack {
             Image(systemName: "globe")
                 .imageScale(.large)
