@@ -9,38 +9,20 @@ import SwiftUI
 
 extension EnvironmentValues {
     /// Controls whether the ``Sticky`` view modifier can be applied
-    var isStickable: Stickable.Value {
-        get { self[Stickable.self] }
-        set { self[Stickable.self] = newValue }
-    }
+    @Entry var isStickable: Bool = false
     
     /// The sticky axis used by subviews in a ``StickyScrollView`` to determine their offset
-    var stickyAxis: StickyAxis.Value {
-        get { self[StickyAxis.self] }
-        set { self[StickyAxis.self] = newValue }
-    }
+    @Entry var stickyAxis: Axis = .vertical
     
     /// Describes how a ``StickyScrollView`` should handle situations where multiple subviews are sticking
-    var stickyBehavior: StickyBehaviorKey.Value {
-        get { self[StickyBehaviorKey.self] }
-        set { self[StickyBehaviorKey.self] = newValue }
-    }
+    @Entry var stickyBehavior: StickyBehavior = .fadeOut
     
     /// The safe area edges which sticky subviews in a ``StickyScrollView`` can enter
-    var stickyEdgesIgnoringSafeArea: StickyEdgesIgnoringSafeArea.Value {
-        get { self[StickyEdgesIgnoringSafeArea.self] }
-        set { self[StickyEdgesIgnoringSafeArea.self] = newValue }
-    }
+    @Entry var stickyEdgesIgnoringSafeArea: [StickyEdge] = []
     
     /// A collection of sticky frames used for subviews in a ``StickyScrollView`` to determine their offset
-    var stickyFrames: StickyFrames.Value {
-        get { self[StickyFrames.self] }
-        set { self[StickyFrames.self] = newValue }
-    }
+    @Entry var stickyFrames: [Namespace.ID: StickyFrame] = [:]
     
     /// An optional ``StickyScrollViewCoordinator`` that subviews of a ``StickyScrollView`` can use to control the scroll position
-    var stickyScrollCoordinator: StickyScrollCoordinatorKey.Value {
-        get { self[StickyScrollCoordinatorKey.self] }
-        set { self[StickyScrollCoordinatorKey   .self] = newValue }
-    }
+    @Entry var stickyScrollCoordinator: StickyScrollCoordinator? = nil
 }

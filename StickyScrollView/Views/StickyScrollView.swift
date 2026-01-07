@@ -15,7 +15,7 @@ public struct StickyScrollView<Content: View>: View {
     private let edgesIgnoringSafeArea: [StickyEdge]
     private let content: Content
     
-    @State private var frames: StickyFrames.Value = [:]
+    @State private var frames: [Namespace.ID: StickyFrame] = [:]
     @State private var scrollCoordinator = StickyScrollCoordinator()
     
     /// Creates a ``ScrollView`` that allows content to stick once it reaches the starting edge
