@@ -78,6 +78,14 @@ public struct StickyViewModifier: ViewModifier {
                 frame: StickyFrame(frame: frame, edge: edge),
                 otherFrames: otherFrames
             )
+        case .collapse:
+            return CollapseStickyTransformer(
+                axis: stickyAxis,
+                scrollContainerEnd: scrollContainerEnd,
+                safeAreaInset: safeAreaInset,
+                frame: StickyFrame(frame: frame, edge: edge),
+                otherFrames: otherFrames
+            )
         }
     }
     
