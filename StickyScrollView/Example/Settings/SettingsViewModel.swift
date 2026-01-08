@@ -10,7 +10,7 @@ import SwiftUI
 @Observable final class SettingsViewModel {
     var shouldStick: Bool = true
     var scrollAxis: Axis = .vertical
-    var stickyBehavior: StickyBehavior = .fadeOut
+    var stickyBehavior: StickyBehavior = .fade
     var numHeaders: Int = 5
     var numFooters: Int = 5
     var isTappable: Bool = true

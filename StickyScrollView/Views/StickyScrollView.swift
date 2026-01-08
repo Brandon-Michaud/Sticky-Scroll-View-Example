@@ -71,7 +71,7 @@ public struct StickyScrollView<Content: View>: View {
         Color.blue
             .frame(height: 100)
         
-        StickyScrollView(axis: .vertical, behavior: .fadeOut) {
+        StickyScrollView(axis: .vertical, behavior: .fade) {
             VStack {
                 Image(systemName: "globe")
                     .imageScale(.large)
@@ -100,7 +100,7 @@ public struct StickyScrollView<Content: View>: View {
 }
 
 #Preview {
-    StickyScrollView(axis: .horizontal, behavior: .fadeOut) {
+    StickyScrollView(axis: .horizontal, behavior: .fade) {
         HStack {
             Image(systemName: "globe")
                 .imageScale(.large)

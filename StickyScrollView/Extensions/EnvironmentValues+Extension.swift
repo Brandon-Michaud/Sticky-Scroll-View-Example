@@ -15,7 +15,7 @@ extension EnvironmentValues {
     @Entry var stickyAxis: Axis = .vertical
     
     /// Describes how a ``StickyScrollView`` should handle situations where multiple subviews are sticking
-    @Entry var stickyBehavior: StickyBehavior = .fadeOut
+    @Entry var stickyBehavior: StickyBehavior = .fade
     
     /// The safe area edges which sticky subviews in a ``StickyScrollView`` can enter
     @Entry var stickyEdgesIgnoringSafeArea: [StickyEdge] = []

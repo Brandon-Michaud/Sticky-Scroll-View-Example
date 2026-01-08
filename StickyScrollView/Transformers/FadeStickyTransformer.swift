@@ -1,5 +1,5 @@
 //
-//  FadeOutStickyTransformer.swift
+//  FadeStickyTransformer.swift
 //  StickyScrollView
 //
 //  Created by Brandon Michaud on 1/5/26.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// A transformer that will make previous sticky views fade out
-struct FadeOutStickyTransformer: StickyTransforming {
+struct FadeStickyTransformer: StickyTransforming {
     fileprivate let axis: Axis
     fileprivate let scrollContainerEnd: CGFloat
     fileprivate let safeAreaInset: CGFloat

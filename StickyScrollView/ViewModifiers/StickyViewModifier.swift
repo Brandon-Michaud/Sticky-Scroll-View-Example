@@ -62,8 +62,8 @@ public struct StickyViewModifier: ViewModifier {
                 frame: StickyFrame(frame: frame, edge: edge),
                 otherFrames: otherFrames
             )
-        case .fadeOut:
-            return FadeOutStickyTransformer(
+        case .fade:
+            return FadeStickyTransformer(
                 axis: stickyAxis,
                 scrollContainerEnd: scrollContainerEnd,
                 safeAreaInset: safeAreaInset,
