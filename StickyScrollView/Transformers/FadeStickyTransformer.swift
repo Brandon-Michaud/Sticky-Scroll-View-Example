@@ -235,13 +235,13 @@ struct FadeStickyTransformer: StickyTransforming {
             case .horizontal:
                 // Offset so view is at the leading edge
                 let width = frame.frame.width
-                let offset = (width - width * scaleFactor) / 2
+                let offset = (width - width * scaleFactor) / 2.1
                 
                 return CGSize(width: -offset, height: .zero)
             case .vertical:
                 // Offset so view is at the top edge
                 let height = frame.frame.height
-                let offset = (height - height * scaleFactor) / 2
+                let offset = (height - height * scaleFactor) / 2.1
 
                 return CGSize(width: .zero, height: -offset)
             }
@@ -250,13 +250,13 @@ struct FadeStickyTransformer: StickyTransforming {
             case .horizontal:
                 // Offset so view is at the trailing edge
                 let width = frame.frame.width
-                let offset = (width - width * scaleFactor) / 2
+                let offset = (width - width * scaleFactor) / 2.1
                 
                 return CGSize(width: offset, height: .zero)
             case .vertical:
                 // Offset so view is at the bottom edge
                 let height = frame.frame.height
-                let offset = (height - height * scaleFactor) / 2
+                let offset = (height - height * scaleFactor) / 2.1
                 
                 return CGSize(width: .zero, height: offset)
             }
