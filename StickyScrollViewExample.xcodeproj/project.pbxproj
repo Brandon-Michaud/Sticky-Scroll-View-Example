@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		B9549D7F2F05FF460036CBF0 /* StickyScrollView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StickyScrollView.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9549D7F2F05FF460036CBF0 /* StickyScrollViewExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StickyScrollViewExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B9549D812F05FF460036CBF0 /* StickyScrollView */ = {
+		B9549D812F05FF460036CBF0 /* StickyScrollViewExample */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = StickyScrollView;
+			path = StickyScrollViewExample;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		B9549D762F05FF460036CBF0 = {
 			isa = PBXGroup;
 			children = (
-				B9549D812F05FF460036CBF0 /* StickyScrollView */,
+				B9549D812F05FF460036CBF0 /* StickyScrollViewExample */,
 				B9549D802F05FF460036CBF0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		B9549D802F05FF460036CBF0 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B9549D7F2F05FF460036CBF0 /* StickyScrollView.app */,
+				B9549D7F2F05FF460036CBF0 /* StickyScrollViewExample.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B9549D7E2F05FF460036CBF0 /* StickyScrollView */ = {
+		B9549D7E2F05FF460036CBF0 /* StickyScrollViewExample */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B9549D8A2F05FF480036CBF0 /* Build configuration list for PBXNativeTarget "StickyScrollView" */;
+			buildConfigurationList = B9549D8A2F05FF480036CBF0 /* Build configuration list for PBXNativeTarget "StickyScrollViewExample" */;
 			buildPhases = (
 				B9549D7B2F05FF460036CBF0 /* Sources */,
 				B9549D7C2F05FF460036CBF0 /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				B9549D812F05FF460036CBF0 /* StickyScrollView */,
+				B9549D812F05FF460036CBF0 /* StickyScrollViewExample */,
 			);
-			name = StickyScrollView;
+			name = StickyScrollViewExample;
 			packageProductDependencies = (
 			);
 			productName = StickyScrollView;
-			productReference = B9549D7F2F05FF460036CBF0 /* StickyScrollView.app */;
+			productReference = B9549D7F2F05FF460036CBF0 /* StickyScrollViewExample.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = B9549D7A2F05FF460036CBF0 /* Build configuration list for PBXProject "StickyScrollView" */;
+			buildConfigurationList = B9549D7A2F05FF460036CBF0 /* Build configuration list for PBXProject "StickyScrollViewExample" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B9549D7E2F05FF460036CBF0 /* StickyScrollView */,
+				B9549D7E2F05FF460036CBF0 /* StickyScrollViewExample */,
 			);
 		};
 /* End PBXProject section */
@@ -313,7 +313,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B9549D7A2F05FF460036CBF0 /* Build configuration list for PBXProject "StickyScrollView" */ = {
+		B9549D7A2F05FF460036CBF0 /* Build configuration list for PBXProject "StickyScrollViewExample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B9549D882F05FF480036CBF0 /* Debug */,
@@ -322,7 +322,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B9549D8A2F05FF480036CBF0 /* Build configuration list for PBXNativeTarget "StickyScrollView" */ = {
+		B9549D8A2F05FF480036CBF0 /* Build configuration list for PBXNativeTarget "StickyScrollViewExample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B9549D8B2F05FF480036CBF0 /* Debug */,

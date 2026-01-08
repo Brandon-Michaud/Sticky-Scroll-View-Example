@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct StickyScrollViewApp: App {
+struct StickyScrollExampleViewApp: App {
     var body: some Scene {
         WindowGroup {
             ExampleView()
