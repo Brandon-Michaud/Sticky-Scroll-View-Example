@@ -5,6 +5,7 @@
 //  Created by Brandon Michaud on 12/31/25.
 //
 
+import StickyScrollView
 import SwiftUI
 
 struct ExampleView: View {

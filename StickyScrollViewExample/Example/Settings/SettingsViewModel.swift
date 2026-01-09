@@ -5,6 +5,7 @@
 //  Created by Brandon Michaud on 1/3/26.
 //
 
+import StickyScrollView
 import SwiftUI
 
 @Observable final class SettingsViewModel {

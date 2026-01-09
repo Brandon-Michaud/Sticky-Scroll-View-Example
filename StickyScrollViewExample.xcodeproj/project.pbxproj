@@ -6,8 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B9BC2B472F107CD7008AA69D /* StickyScrollView in Frameworks */ = {isa = PBXBuildFile; productRef = B9BC2B462F107CD7008AA69D /* StickyScrollView */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		B9549D7F2F05FF460036CBF0 /* StickyScrollViewExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StickyScrollViewExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9BC2B442F107914008AA69D /* StickyScrollView */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = StickyScrollView; path = ../StickyScrollView; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +28,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B9BC2B472F107CD7008AA69D /* StickyScrollView in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -32,6 +38,7 @@
 		B9549D762F05FF460036CBF0 = {
 			isa = PBXGroup;
 			children = (
+				B9BC2B442F107914008AA69D /* StickyScrollView */,
 				B9549D812F05FF460036CBF0 /* StickyScrollViewExample */,
 				B9549D802F05FF460036CBF0 /* Products */,
 			);
@@ -65,6 +72,7 @@
 			);
 			name = StickyScrollViewExample;
 			packageProductDependencies = (
+				B9BC2B462F107CD7008AA69D /* StickyScrollView */,
 			);
 			productName = StickyScrollView;
 			productReference = B9549D7F2F05FF460036CBF0 /* StickyScrollViewExample.app */;
@@ -94,6 +102,9 @@
 			);
 			mainGroup = B9549D762F05FF460036CBF0;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B9BC2B452F107CD7008AA69D /* XCRemoteSwiftPackageReference "StickyScrollView" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B9549D802F05FF460036CBF0 /* Products */;
 			projectDirPath = "";
@@ -332,6 +343,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B9BC2B452F107CD7008AA69D /* XCRemoteSwiftPackageReference "StickyScrollView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Brandon-Michaud/StickyScrollView";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B9BC2B462F107CD7008AA69D /* StickyScrollView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B9BC2B452F107CD7008AA69D /* XCRemoteSwiftPackageReference "StickyScrollView" */;
+			productName = StickyScrollView;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B9549D772F05FF460036CBF0 /* Project object */;
 }
