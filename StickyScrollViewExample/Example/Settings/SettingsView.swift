@@ -49,49 +49,33 @@ struct SettingsView: View {
                         .pickerStyle(.segmented)
                     }
                     
-                    HStack {
-                        Text("Headers")
+                    VStack(alignment: .leading) {
+                        Text("Headers: \(Int(viewModel.numHeaders))")
                             .font(.headline)
                         
-                        Spacer()
-                        
-                        Picker("Headers", selection: $viewModel.numHeaders) {
-                            ForEach(0...20, id: \.self) { num in
-                                Text("\(num)")
-                                    .tag(num)
-                            }
-                        }
-                        .pickerStyle(.menu)
+                        Slider(value: $viewModel.numHeaders, in: 0...20, step: 1)
                     }
                     
-                    HStack {
-                        Text("Footers")
+                    VStack(alignment: .leading) {
+                        Text("Footers: \(Int(viewModel.numFooters))")
                             .font(.headline)
                         
-                        Spacer()
-                        
-                        Picker("Footers", selection: $viewModel.numFooters) {
-                            ForEach(0...20, id: \.self) { num in
-                                Text("\(num)")
-                                    .tag(num)
-                            }
-                        }
-                        .pickerStyle(.menu)
+                        Slider(value: $viewModel.numFooters, in: 0...20, step: 1)
                     }
                     
                     Toggle("Is Tappable", isOn: $viewModel.isTappable)
-                        .font(.headline)
-                    
-                    Toggle("Ignore Starting Safe Area", isOn: $viewModel.ignoreStartingSafeArea)
-                        .font(.headline)
-                    
-                    Toggle("Ignore Ending Safe Area", isOn: $viewModel.ignoreEndingSafeArea)
                         .font(.headline)
                     
                     Toggle("Grow On Tap", isOn: $viewModel.growOnTap)
                         .font(.headline)
                     
                     Toggle("Invert On Stick", isOn: $viewModel.invertOnStick)
+                        .font(.headline)
+                    
+                    Toggle("Ignore Starting Safe Area", isOn: $viewModel.ignoreStartingSafeArea)
+                        .font(.headline)
+                    
+                    Toggle("Ignore Ending Safe Area", isOn: $viewModel.ignoreEndingSafeArea)
                         .font(.headline)
                 }
                 .padding([.horizontal, .bottom])

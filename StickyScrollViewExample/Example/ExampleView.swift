@@ -25,8 +25,8 @@ struct ExampleView: View {
                     ) {
                         HorizontalScrollContentView(
                             shouldStick: settingsViewModel.shouldStick,
-                            numHeaders: settingsViewModel.numHeaders,
-                            numFooters: settingsViewModel.numFooters,
+                            numHeaders: Int(settingsViewModel.numHeaders),
+                            numFooters: Int(settingsViewModel.numFooters),
                             isTappable: settingsViewModel.isTappable,
                             growOnTap: settingsViewModel.growOnTap,
                             invertOnStick: settingsViewModel.invertOnStick
@@ -40,8 +40,8 @@ struct ExampleView: View {
                     ) {
                         VerticalScrollContentView(
                             shouldStick: settingsViewModel.shouldStick,
-                            numHeaders: settingsViewModel.numHeaders,
-                            numFooters: settingsViewModel.numFooters,
+                            numHeaders: Int(settingsViewModel.numHeaders),
+                            numFooters: Int(settingsViewModel.numFooters),
                             isTappable: settingsViewModel.isTappable,
                             growOnTap: settingsViewModel.growOnTap,
                             invertOnStick: settingsViewModel.invertOnStick

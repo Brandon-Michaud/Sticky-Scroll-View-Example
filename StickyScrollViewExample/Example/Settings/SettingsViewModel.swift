@@ -12,13 +12,13 @@ import SwiftUI
     var shouldStick: Bool = true
     var scrollAxis: Axis = .vertical
     var stickyBehavior: StickyBehavior = .fade
-    var numHeaders: Int = 5
-    var numFooters: Int = 5
+    var numHeaders: Double = 5
+    var numFooters: Double = 5
     var isTappable: Bool = true
-    var ignoreStartingSafeArea: Bool = false
-    var ignoreEndingSafeArea: Bool = false
     var growOnTap: Bool = false
     var invertOnStick: Bool = false
+    var ignoreStartingSafeArea: Bool = false
+    var ignoreEndingSafeArea: Bool = false
     
     var edgesIgnoringSafeArea: [StickyEdge] {
         var edges: [StickyEdge] = []
